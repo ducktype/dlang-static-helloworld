@@ -1,0 +1,31 @@
+name: 'ci'
+on:
+  push:
+  workflow_dispatch:
+#defaults:
+#  run:
+#    shell: bash
+#    working-directory: ${{ github.workspace }}
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    #defaults:
+    #  run:
+    #    working-directory: ${{ github.repository }}
+    steps:
+      #- uses: actions/checkout@v3
+      - run: |
+          git init
+          git remote add origin $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
+          git fetch origin --depth=1 $GITHUB_SHA
+          git checkout $GITHUB_SHA
+      - run: |
+          shopt -s globstar
+          chmod +x ./**/*.sh
+          ./bip/build.sh
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DT=`git --no-pager log -n1 --decorate=no --pretty='format:%cd_%h' --date=format:'%Y-%m-%d_%H-%M-%S'`
+          gh release create $DT ./bip/bin/bip ./bix/bix
